@@ -130,10 +130,10 @@ void Player::ChangeImage() {
 }
 
 void Player::Turn() {
-	if (iNowKey & PAD_INPUT_LEFT) {
+	if (iNowKey & PAD_INPUT_LEFT) { //左に入力されている時
 		turn = true;
 
-		if (moveX == 1.0f) {
+		if (moveX == 1.0f) { //もし移動方向が正の値だったら
 			SlideTurn();
 		}
 		//moveX = -1.0f;
@@ -142,10 +142,15 @@ void Player::Turn() {
 	else if (iNowKey & PAD_INPUT_RIGHT) {
 		turn = false;
 
-		if (moveX == -1.0f) {
+		if (moveX == -1.0f) { //もし移動方向が負の値だったら
 			SlideTurn();
 		}
 		//moveX = 1.0f;
+	}
+
+	/* スライドターン中に入力が離された場合は下で処理を途中再開 */
+	if (slide_turn && iNowKey == 0) { 
+		SlideTurn();
 	}
 }
 
