@@ -5,11 +5,13 @@
 class Player : Input{
 	static int mImagePlayer[MRIO_IMAGE_MAX];    //画像ハンドル格納用変数
 	int change_walk[17] = {8,7,7,6,2,3,4,5,3,5,4,3,5,4,3,5,4}; //歩きの画像変更フレーム
-	int change_run[10] = {8,7,4,3,4,4,4,3,4,2}; //歩きの画像変更フレーム 
+	int change_run[10] = {8,7,4,3,4,4,4,3,4,2}; //走りの画像変更フレーム 
 	int array_num;
 	int player_num;
 	int cnt;
 	int cnt_limit;
+
+
 	bool turn = false; // true:左に向く false:右に向く
 	bool old_turn = false;
 	bool slide_turn = false;
@@ -20,6 +22,7 @@ class Player : Input{
 	double stop_max;
 	double slid_time;
 
+	double acceleration;
 	double speed;
 	double now_speed;
 	float moveX;
@@ -38,7 +41,10 @@ class Player : Input{
 	void ChangeImage(); //画像切り替え処理
 	void ShowDebug(); //デバッグ表示処理
 
+	/* イージング関数 */
 	double InCubic(double t, double totaltime, double max = 1.0, double min = 0.0);
+	double QuadOut(double t, double totaltime, double min, double max);
+	double CubicOut(double t, double totaltime, double min, double max);
 public:
 	void Player_Initialize();//初期化
 	void Player_Finalize();//終了処理

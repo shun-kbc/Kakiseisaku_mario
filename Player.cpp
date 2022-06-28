@@ -21,6 +21,7 @@ void Player::Player_Initialize()//初期化
 
 	speed = 0.1f;
 	now_speed = speed;
+	acceleration = 0.05f;
 	moveX = 1.0f;
 	p_posX = 320;
 	now_posX = p_posX;
@@ -67,6 +68,10 @@ void Player::Player_Update()//更新
 			Walk();
 		}
 	}
+
+	if (idle) {
+		walk = false;
+	}
 }
 
 void Player::Player_Draw()//描画
@@ -78,7 +83,7 @@ void Player::Player_Draw()//描画
 				now_posX = p_posX;
 			}
 			else {
-				DrawRotaGraph(now_posX, 240, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+				DrawRotaGraph(p_posX, 240, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
 			}
 		}
 		else { //ダッシュフラグがfalseの時
@@ -87,11 +92,12 @@ void Player::Player_Draw()//描画
 				now_posX = p_posX;
 			}
 			else {
-				DrawRotaGraph(now_posX, 240, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+				DrawRotaGraph(p_posX, 240, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
 			}
 		}
 	}
 	else { //止まる時
+		
 		if (speed > 0.1) {
 			DrawRotaGraph(p_posX, 240, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
 		}
@@ -104,7 +110,10 @@ void Player::Player_Draw()//描画
 }
 
 void Player::ChangeImage() {
-	if (!idle) {
+	if (slide_turn && speed > 0.5) {
+		//player_num = 4;
+	}
+	else if (!idle && !slide_turn) {
 		if (!dash) { //歩き
 			if (++cnt >= cnt_limit) {
 				cnt = 0;
@@ -125,27 +134,31 @@ void Player::ChangeImage() {
 				cnt_limit = change_run[array_num];
 			}
 		}
+	}else if(idle){
+		cnt = 0;
+		cnt_limit = 0;
+		array_num = 0;
 	}
 	
 }
 
 void Player::Turn() {
 	if (iNowKey & PAD_INPUT_LEFT) { //左に入力されている時
-		turn = true;
-
 		if (moveX == 1.0f) { //もし移動方向が正の値だったら
 			SlideTurn();
 		}
-		//moveX = -1.0f;
+		else {
+			turn = true;
+		}
 		
 	}
 	else if (iNowKey & PAD_INPUT_RIGHT) {
-		turn = false;
-
 		if (moveX == -1.0f) { //もし移動方向が負の値だったら
 			SlideTurn();
 		}
-		//moveX = 1.0f;
+		else {
+			turn = false;
+		}
 	}
 
 	/* スライドターン中に入力が離された場合は下で処理を途中再開 */
@@ -161,13 +174,15 @@ void Player::Walk() { //歩く処理
 			walk = true;
 			stop_time = 0;
 			speed = 0.1f;
+			acceleration = 0.05f;
 		}
 
 		ChangeImage();//画像切り替え処理
 
 		time++;
 		if (speed < 3) {
-			speed = InCubic(time, 40, 3.0, 0.1);
+			if (time > 23)acceleration = 0.1;
+			speed = acceleration * time + 0.1;
 		}
 		else {
 			speed = 3;
@@ -188,6 +203,7 @@ void Player::Dash() { //走る処理
 		if (idle == true) {
 			idle = false;
 			stop_time = 0;
+			acceleration = 0.1f;
 		}
 		ChangeImage();//画像切り替え処理
 
@@ -198,24 +214,27 @@ void Player::Dash() { //走る処理
 			if (wtor_time == 0) {
 				wtor_time = time + 16;
 			}
-			if (speed < 5) {
-				speed = InCubic(time, wtor_time, 5.0, 0.1);
+			if (time < wtor_time && speed < 5) {
+				wtor_time++;
+				if (speed >= 3)acceleration = 0.15;
+				speed = acceleration * wtor_time + 0.1;
 			}
 			else {
 				speed = 5;
 				walk = false;
 				wtor_time = 0; //ランタイム初期化
 			}
+			//speed = 5;
 		}
 		else {
-			if (speed < 5) {
-				speed = InCubic(time, 33, 5.0, 0.1);
+			if (time < 33 && speed < 5) {
+				if (speed >= 3)acceleration = 0.15;
+				speed = acceleration * time + 0.1;
 			}
 			else {
 				speed = 5;
 			}
 		}
-
 
 		p_posX = p_posX + (speed * moveX); //プレイヤーの移動
 		DrawFormatString(0, 170, GetColor(255, 255, 255), "現在進んでいます");
@@ -231,14 +250,19 @@ void Player::Stop() { //止まる時の処理
 			idle = true; //止まる時のフラグをtrueにする
 			now_speed = speed;
 			stop_max = speed * 5.3f;
+			acceleration = 0.05f;
+
+			cnt = 0;
+			array_num = 0;
 		}
 
 
-		if (speed > 0.1f) {
+		if (stop_time < stop_max && speed > 0.1f) {
 			++stop_time;
 			time = 0;
 
-			speed = now_speed - InCubic(stop_time, stop_max, now_speed, 0);
+			//if (stop_time > 20)acceleration = 0.05f;
+			speed = speed - (acceleration) * stop_time + 0.1;
 
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
 			now_posX = p_posX;
@@ -262,16 +286,19 @@ void Player::SlideTurn() {
 		stop_max = speed * 5.3f;
 	}
 	
-
+	if (speed < now_speed && speed > 0.2) {
+		player_num = 4;
+	}
 	if (speed > 0.1f) {
+
 		time = 0;
 		++slid_time;
-
-		speed = now_speed - InCubic(slid_time, stop_max, now_speed, 0); //スピード減速処理
+		
+		speed = speed - (acceleration) * slid_time + 0.1;
 
 		p_posX = p_posX + (speed * moveX); //プレイヤーの移動
 		now_posX = p_posX;
-		DrawFormatString(0, 170, GetColor(255, 255, 255), "現在進んでいます");
+		DrawFormatString(0, 170, GetColor(255, 255, 255), "ブレーキ処理中");
 	}
 	else {
 		
@@ -291,12 +318,6 @@ void Player::ShowDebug() { //デバッグ表示
 	DrawFormatString(0, 130, GetColor(255, 255, 255), "speed計算%lf = %lf + (%lf * %f)", p_posX,p_posX,speed,moveX);
 	DrawFormatString(0, 150, GetColor(255, 255, 255), "Nの値 : %d", slide_turn);
 	DrawFormatString(0, 220, GetColor(255, 255, 255), "stop_time : %d",stop_time);
-}
-
-double Player::InCubic(double t, double totaltime, double max, double min)
-{
-	max -= min;
-	t /= totaltime;
-
-	return max * t * t * t + min;
+	DrawFormatString(0, 240, GetColor(255, 255, 255), "cnt_limit : %d", cnt_limit);
+	DrawFormatString(0, 260, GetColor(255, 255, 255), "idle : %d", idle);
 }
