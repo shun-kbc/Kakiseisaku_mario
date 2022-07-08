@@ -11,41 +11,69 @@ class Player : Input{
 	int cnt;
 	int cnt_limit;
 
+	int input;
 
 	bool turn = false; // true:左に向く false:右に向く
 	bool old_turn = false;
 	bool slide_turn = false;
+	bool right_turn;
+	bool left_turn;
+	
+	bool input_hold;
 
 	double time;
 	double wtor_time;
 	double stop_time;
 	double stop_max;
 	double slid_time;
+	double jInput_time;
+	double fall_time;
+	double now_time;
+
+	double continue_time;
 
 	double acceleration;
+	double j_accel;
 	double speed;
 	double now_speed;
+	double jump_power;
 	float moveX;
-	double p_posX; //プレイヤーのポジション
+	float moveY;
+	//double p_posX; //プレイヤーのポジション
 	double now_posX;
+	//double p_posY; //プレイヤーのポジション
+	double now_posY;
+	double jump_max; //最高到達点
+
 	//int N;
 	bool dash;
 	bool walk;
 	bool idle;
+	bool jump;
+	bool _continue;
+	bool isGround;
 
 	void Turn(); //振り向き処理
 	void Walk(); //歩き
 	void Dash(); //走り
 	void Stop();
 	void SlideTurn();
+	void Jump(); //ジャンプ
+	void JumpMove();
+	void Fall();
 	void ChangeImage(); //画像切り替え処理
 	void ShowDebug(); //デバッグ表示処理
+	double CircOut(double t, double totaltime, double min, double max);
+	bool Continue();
 
-	/* イージング関数 */
-	double InCubic(double t, double totaltime, double max = 1.0, double min = 0.0);
-	double QuadOut(double t, double totaltime, double min, double max);
-	double CubicOut(double t, double totaltime, double min, double max);
 public:
+	double p_posX; //プレイヤーのポジション
+	double p_posY; //プレイヤーのポジション
+	double p_w;
+	double p_h;
+
+	bool fall = false;
+
 	void Player_Initialize();//初期化
 	void Player_Finalize();//終了処理
 	void Player_Update();//更新

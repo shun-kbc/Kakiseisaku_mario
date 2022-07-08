@@ -1,4 +1,6 @@
 #pragma once
+#include "Player.h"
+#include "Block.h"
 
 class Game {
 
@@ -10,4 +12,7 @@ public:
 	static void Game_Draw();//•`‰æ
 
 };
+
+extern Player player;
+extern Block block;
 
