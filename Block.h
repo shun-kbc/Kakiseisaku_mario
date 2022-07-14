@@ -14,6 +14,8 @@ public:
 	double b_w;
 	double b_h;
 
+	double gro_posY;
+
 	void Block_Initialize();
 	void Block_Finalize();
 	void Block_Update();
@@ -22,3 +24,6 @@ public:
 
 	
 };
+//class SetBlock : Block {
+//
+// };

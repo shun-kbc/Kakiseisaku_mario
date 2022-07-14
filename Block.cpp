@@ -8,10 +8,14 @@ int Block::mImageKaraBlock = {};    //画像ハンドル格納用変数
 void Block::Block_Initialize() {
 	mImageKaraBlock = LoadGraph("images/1-1/kara_block.png");
 
+	gro_posY = 432;
+
 	b_x = 320;
-	b_y = 144;
+	b_y = gro_posY - ((double)32.0f * (double)4.0f);
 	b_w = 30;
 	b_h = 30;
+
+	
 }
 
 void Block::Block_Finalize() {
@@ -19,15 +23,19 @@ void Block::Block_Finalize() {
 }
 
 void Block::Block_Update() {
-	if (player.p_posY - (player.p_h * 0.5f) < b_y + (b_h * 0.5f) && player.p_posY - (player.p_h * 0.5f) > b_y - (b_h * 0.5f)) {
-		if (HitBoxPlayer()) {
 
+	/* マリオがブロックの下からぶつかったとき */
+	if (HitBoxPlayer()) {
+		if ((player.p_posX > b_x - (b_w * 0.5) && player.p_posX < b_x + (b_w * 0.5)) && player.p_posY - (player.p_h * 0.5f) < b_y + (b_h * 0.5f) && player.p_posY - (player.p_h * 0.5f) > b_y - (b_h * 0.5f)) {
 			player.fall = true;
+
+			/* ここにブロックが浮いたり、壊れたりする処理を入れる */
 		}
 	}
+	
 
-	DrawFormatString(0, 320, GetColor(255, 255, 255), "Playerの位置 : %lf", player.p_posX);
-	DrawFormatString(0, 340, GetColor(255, 255, 255), "ブロックの高さ : %lf", b_h);
+	//DrawFormatString(0, 320, GetColor(255, 255, 255), "Playerの位置 : %lf", player.p_posX);
+	//DrawFormatString(0, 340, GetColor(255, 255, 255), "ブロックの高さ : %lf", b_h);
 
 
 	
@@ -35,7 +43,7 @@ void Block::Block_Update() {
 
 void Block::Block_Draw() {
 	DrawRotaGraph(b_x, b_y/* + BLOCK_HEIGHT*/,1.0f,0,mImageKaraBlock,true,false);
-	DrawBox(0, 480, 500, 256, GetColor(116,80,48), TRUE);
+	DrawBox(0, 480, 500, gro_posY, GetColor(116,80,48), TRUE);
 
 
 	/*【当たり判定デバッグ】*/

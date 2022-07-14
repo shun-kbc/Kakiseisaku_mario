@@ -18,6 +18,7 @@ class Player : Input{
 	bool slide_turn = false;
 	bool right_turn;
 	bool left_turn;
+	bool dont_move;
 	
 	bool input_hold;
 
@@ -39,11 +40,13 @@ class Player : Input{
 	double jump_power;
 	float moveX;
 	float moveY;
-	//double p_posX; //プレイヤーのポジション
+	double startX;
+	double startY;
 	double now_posX;
-	//double p_posY; //プレイヤーのポジション
 	double now_posY;
+	double jump_pos;
 	double jump_max; //最高到達点
+	double minus;
 
 	//int N;
 	bool dash;
@@ -61,6 +64,7 @@ class Player : Input{
 	void Jump(); //ジャンプ
 	void JumpMove();
 	void Fall();
+	void KillY();
 	void ChangeImage(); //画像切り替え処理
 	void ShowDebug(); //デバッグ表示処理
 	double CircOut(double t, double totaltime, double min, double max);

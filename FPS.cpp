@@ -15,7 +15,7 @@ bool Fps::Update() {
 }
 
 void Fps::Draw() {
-	DrawFormatString(0, 0, GetColor(255, 255, 255), "%.1f", mFps);
+	DrawFormatString(0, 0, GetColor(255, 255, 255), "FPS:%.1f", mFps);
 }
 
 void Fps::Wait() {
