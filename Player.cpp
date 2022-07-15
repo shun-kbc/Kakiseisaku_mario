@@ -22,7 +22,7 @@ void Player::Player_Initialize()//初期化
 
 	input = 0;
 
-	speed = 0.1f;
+	speed = 0.0f;
 	now_speed = speed;
 	acceleration = 0.05f;
 	j_accel = 1.0f;
@@ -398,8 +398,6 @@ void Player::Walk() { //歩く処理
 		else if (now_speed == 0.1f) {
 
 			time++;
-
-
 			if (iNowKey & PAD_INPUT_RIGHT) {
 				if (speed < 3) {
 					if (time > 23)acceleration = 0.1;
@@ -422,7 +420,7 @@ void Player::Walk() { //歩く処理
 			}
 		}
 
-		if (!dont_move) {
+		if (!dont_move && (iNowKey & PAD_INPUT_LEFT) || (iNowKey & PAD_INPUT_RIGHT)) {
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
 		}
 		
@@ -550,7 +548,7 @@ void Player::Dash() { //走る処理
 			}
 		}
 
-		if (!dont_move) {
+		if (!dont_move && (iNowKey & PAD_INPUT_LEFT) || (iNowKey & PAD_INPUT_RIGHT)) {
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
 		}
 	}
