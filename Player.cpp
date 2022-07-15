@@ -48,13 +48,14 @@ void Player::Player_Initialize()//初期化
 	p_h = 32;
 
 	//N = 7;
-	dont_move = false;
+	dont_move = false; //ブロックに当たっている時
 	dash = false;
 	walk = false;
 	idle = true;
 	fall = false;
 	input_hold = false;
 	isGround = true;
+	reverse_input = false;
 
 	time = 0;
 	wtor_time = 0;
@@ -123,6 +124,7 @@ void Player::Player_Update()//更新
 	else if (!jump && (p_posX - (p_w * 0.5) > 498)/* ←ちゃんとした地面の判定に変えるとブロックの横に落下中に当たったときのなぐは治る */) {
 		fall = true;
 		isGround = false;
+		reverse_input = false;
 		Fall();
 	}
 	
@@ -149,6 +151,8 @@ void Player::Player_Update()//更新
 			jInput_time = 0;
 			fall_time = 0;
 			jump_power = 1.0f;
+
+			reverse_input = false;
 
 			p_posY = block.b_y - (block.b_h);
 
@@ -280,7 +284,6 @@ void Player::Turn() {
 			}
 			else {
 				left_turn = false;
-				turn = true;
 			}
 
 		}
@@ -292,7 +295,6 @@ void Player::Turn() {
 			}
 			else {
 				right_turn = false;
-				turn = false;
 			}
 		}
 
@@ -301,7 +303,7 @@ void Player::Turn() {
 			SlideTurn();
 		}
 
-		if (slide_turn == false) {
+		if (slide_turn == false && iNowKey != 0) {
 			if (moveX == -1.0f) {
 				turn = true;
 			}
@@ -343,14 +345,12 @@ void Player::Walk() { //歩く処理
 		}
 	}
 	else if (jump) {
-		/*if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT)--speed;
-		if (abs(speed) > 1)speed = -1;*/
-		/*if ((iNowKey == 2 || iNowKey == 34)) {
-			DrawFormatString(0, 210, GetColor(255, 255, 255), "ジャンプ中左入力");
-		}*/
-		if (now_speed > 0.1){
+
+		if (now_speed > 0.1f){
 			if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT) {
-				//--speed;
+
+				reverse_input = true;  //逆方向に入力したのを記録
+
 				if (now_time < 34.0f) {
 					minus = (double)(speed / (34.0f - now_time));
 					speed -= (double)minus;
@@ -368,23 +368,22 @@ void Player::Walk() { //歩く処理
 
 			}
 			else if (moveX == -1.0f && iNowKey & PAD_INPUT_RIGHT) {
-				//--speed;
-				if (now_time < 34.0f) {
-					minus = (double)(speed / (34.0f - now_time));
-					speed -= (double)minus;
+
+				reverse_input = true;  //逆方向に入力したのを記録
+
+				if (now_time < 34.0f) { //34.0fはジャンプで最高到達点に行ってから落ちはじめる直前のフレーム
+					minus = (double)(speed / (34.0f - now_time)); //スピードから引く値をボタンの入力時間によって可変
+					speed -= (double)minus; //スピードから値を引く
 				}
-				else if (fall) {
+				else if (fall) { //逆方向へ入力中の落下時
 					speed -= 0.1f;
 				}
 
-				if (!dash) {
-					if (speed < -1.5f)speed = -1.5f;
-				}
-				else {
-					if (speed < -2.5)speed = -2.5f;
-				}
+				if (speed < -1.5f)speed = -1.5f;
+
+				if (speed < -2.5)speed = -2.5f; //ダッシュではこれを使う
 			}
-			else {
+			else if(!reverse_input){ //逆方向への入力がない時　
 				time++;
 				if (speed < 3) {
 					if (time > 23)acceleration = 0.1;
@@ -396,13 +395,10 @@ void Player::Walk() { //歩く処理
 			}
 
 		}
-		if (!dont_move) {
-			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
-		}
-		else if(now_speed == 0.1f){
+		else if (now_speed == 0.1f) {
 
 			time++;
-			
+
 
 			if (iNowKey & PAD_INPUT_RIGHT) {
 				if (speed < 3) {
@@ -424,9 +420,12 @@ void Player::Walk() { //歩く処理
 				}
 				moveX = -1.0f;
 			}
+		}
 
+		if (!dont_move) {
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
 		}
+		
 	}
 	else {
 		if (!jump) {
@@ -436,7 +435,7 @@ void Player::Walk() { //歩く処理
 }
 
 void Player::Dash() { //走る処理
-	if (dash == true && (iNowKey & PAD_INPUT_LEFT || iNowKey & PAD_INPUT_RIGHT)) {
+	if (!jump && dash == true && (iNowKey & PAD_INPUT_LEFT || iNowKey & PAD_INPUT_RIGHT)) {
 		if (idle == true) {
 			idle = false;
 			stop_time = 0;
@@ -482,8 +481,78 @@ void Player::Dash() { //走る処理
 		
 		
 	}
-	else if (jump && now_speed > 0.1f) {
-		p_posX = p_posX + (speed * moveX); //プレイヤーの移動
+	else if (jump) {
+		if (now_speed > 0.1f) {
+			if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT) {
+
+				reverse_input = true;  //逆方向に入力したのを記録
+
+				if (now_time < 34.0f) {
+					minus = (double)(speed / (34.0f - now_time));
+					speed -= (double)minus;
+				}
+				else if (fall) {
+					speed -= 0.1f;
+				}
+
+				if (speed < -2.5f)speed = -2.5f;
+
+			}
+			else if (moveX == -1.0f && iNowKey & PAD_INPUT_RIGHT) {
+
+				reverse_input = true;  //逆方向に入力したのを記録
+
+				if (now_time < 34.0f) { //34.0fはジャンプで最高到達点に行ってから落ちはじめる直前のフレーム
+					minus = (double)(speed / (34.0f - now_time)); //スピードから引く値をボタンの入力時間によって可変
+					speed -= (double)minus; //スピードから値を引く
+				}
+				else if (fall) { //逆方向へ入力中の落下時
+					speed -= 0.1f;
+				}
+
+				if (speed < -2.5)speed = -2.5f; 
+			}
+			else if (!reverse_input) { //逆方向への入力がない時　
+				time++;
+				if (speed < 5.0f) {
+					if (time > 33)acceleration = 0.1;
+					speed = acceleration * time + 0.1;
+				}
+				else if (speed >= 5.0f) {
+					speed = 5.0f;
+				}
+			}
+		}
+		else if (now_speed == 0.1f) {
+
+			time++;
+
+
+			if (iNowKey & PAD_INPUT_RIGHT) {
+				if (speed < 5.0f) {
+					if (time > 33)acceleration = 0.1;
+					speed = acceleration * time + 0.1;
+				}
+				else if (speed >= 5.0f) {
+					speed = 5.0f;
+				}
+				moveX = 1.0f;
+			}
+			else if (iNowKey & PAD_INPUT_LEFT) {
+				if (speed < 5.0f) {
+					if (time > 33)acceleration = 0.1;
+					speed = acceleration * time + 0.1;
+				}
+				else if (speed >= 5.0f) {
+					speed = 5.0f;
+				}
+				moveX = -1.0f;
+			}
+		}
+
+		if (!dont_move) {
+			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
+		}
 	}
 	else {
 		if (!jump)Stop();
@@ -538,7 +607,15 @@ void Player::SlideTurn() {
 		stop_max = speed * 5.3f;
 	}
 	
-	if (slide_turn) {
+	if (speed <= 0.1f) {
+
+		slide_turn = false;
+		moveX = -moveX;
+		slid_time = 0;
+		speed = 0.1f;
+	}
+
+	else if (slide_turn) {
 		if (speed < now_speed && speed > 0.1) {
 			player_num = 4;
 		}
@@ -556,13 +633,7 @@ void Player::SlideTurn() {
 
 	
 
-	if (speed <= 0.1f) {
-		
-		slide_turn = false;
-		moveX = -moveX;
-		slid_time = 0;
-		speed = 0.1f;
-	}
+	
 }
 
 void Player::Jump() {

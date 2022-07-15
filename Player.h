@@ -55,6 +55,7 @@ class Player : Input{
 	bool jump;
 	bool _continue;
 	bool isGround;
+	bool reverse_input;
 
 	void Turn(); //U‚èŒü‚«ˆ—
 	void Walk(); //•à‚«
