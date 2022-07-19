@@ -2,7 +2,19 @@
 #define MRIO_IMAGE_MAX 9
 #include "Input.h"
 
+
+
 class Player : Input{
+	/*enum class Accel_type {
+		walk1,
+		walk2,
+		run1,
+		run2,
+		none
+	};
+	Accel_type acceltype;*/
+	//string accel;
+
 	static int mImagePlayer[MRIO_IMAGE_MAX];    //画像ハンドル格納用変数
 	int change_walk[17] = {8,7,7,6,2,3,4,5,3,5,4,3,5,4,3,5,4}; //歩きの画像変更フレーム
 	int change_run[10] = {8,7,4,3,4,4,4,3,4,2}; //走りの画像変更フレーム 
@@ -18,6 +30,7 @@ class Player : Input{
 	bool slide_turn = false;
 	bool right_turn;
 	bool left_turn;
+	bool turn_cancel;
 	bool dont_move;
 	
 	bool input_hold;

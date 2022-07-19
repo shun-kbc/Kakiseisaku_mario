@@ -12,8 +12,11 @@
 
 int Player::mImagePlayer[MRIO_IMAGE_MAX] = {}; //static変数は呼び出すときは必ず特殊な初期化が必要(グローバル変数の様に書く)
 
+
 void Player::Player_Initialize()//初期化
 {
+	
+
 	LoadDivGraph("images/char/mario.png", MRIO_IMAGE_MAX, MRIO_IMAGE_MAX, 1, 32, 32, mImagePlayer);
 	player_num = 0;
 	cnt = 0;
@@ -56,6 +59,7 @@ void Player::Player_Initialize()//初期化
 	input_hold = false;
 	isGround = true;
 	reverse_input = false;
+	turn_cancel = false;
 
 	time = 0;
 	wtor_time = 0;
@@ -80,12 +84,6 @@ void Player::Player_Finalize()//終了処理
 
 void Player::Player_Update()//更新
 {
-	/*if (jump) {
-		if (moveX == 1.0f && (iNowKey == 2 || iNowKey == 34)) {
-			DrawFormatString(0, 210, GetColor(255, 255, 255), "ジャンプ中左入力");
-		}
-	}*/
-	
 
 
 	/* ダッシュフラグの切り替え */
@@ -141,7 +139,7 @@ void Player::Player_Update()//更新
 
 
 
-	if (block.HitBoxPlayer()) {
+	if (block.HitBoxPlayer()) { //ブロックとの当たり判定
 
 		/* 【ブロック上に乗る時の処理】 */
 		if ((p_posX + (p_w * 0.5) > block.b_x - (block.b_w * 0.5)) && (p_posX - (p_w * 0.5) < block.b_x + (block.b_w * 0.5)) && p_posY < block.b_y - (block.b_h * 0.5)) {
@@ -164,9 +162,11 @@ void Player::Player_Update()//更新
 			dont_move = true;
 			if ((speed < 1.5f) && p_posX + (p_w * 0.5) > block.b_x - (p_w * 0.5)) {
 				p_posX -= 2.0f;
+				now_posX = p_posX;
 			}
 			else {
 				p_posX = (block.b_x - (block.b_w * 0.5)) - (p_w * 0.5);
+				now_posX = p_posX;
 			}
 			
 		}
@@ -175,9 +175,11 @@ void Player::Player_Update()//更新
 			dont_move = true;
 			if ((speed < 1.5f) && p_posX - (p_w * 0.5) < block.b_x + (p_w * 0.5)) {
 				p_posX += 2.0f;
+				now_posX = p_posX;
 			}
 			else {
 				p_posX = (block.b_x + (block.b_w * 0.5)) + (p_w * 0.5);
+				now_posX = p_posX;
 			}
 		}
 	}
@@ -193,35 +195,40 @@ void Player::Player_Draw()//描画
 	/*【ジャンプの高さデバッグ】*/
 	//DrawBox(0,0,640, jump_max,GetColor(100,100,255),true);
 	//DrawBox(block.b_x - (block.b_w * 0.5), block.b_y + (block.b_h * 0.5), block.b_x + (block.b_w * 0.5), block.b_y - (block.b_h * 0.5), GetColor(255, 255, 255), TRUE);
-
-	if (!idle) { //移動している時
-		if (dash) {	//ダッシュフラグがtrueの時
-			if (time >= 4) {
-				DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
-				now_posX = p_posX;
+	if (!jump) {
+		if (!idle) { //移動している時
+			if (dash) {	//ダッシュフラグがtrueの時
+				if (time >= 4.0f) {
+					DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+					now_posX = p_posX;
+				}
+				else {
+					DrawRotaGraph(now_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+				}
 			}
-			else {
-				DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+			else { //ダッシュフラグがfalseの時
+				if (time >= 7.0f) {
+					DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+					now_posX = p_posX;
+				}
+				else {
+					DrawRotaGraph(now_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+				}
 			}
 		}
-		else { //ダッシュフラグがfalseの時
-			if (time >= 7) {
+		else { //止まる時
+
+			if (speed > 0.0f) {
 				DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
-				now_posX = p_posX;
 			}
 			else {
 				DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
 			}
 		}
 	}
-	else { //止まる時
-		
-		if (speed > 0.1) {
-			DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
-		}
-		else {
-			DrawRotaGraph(now_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
-		}
+	else {
+		DrawRotaGraph(p_posX, p_posY, 1.0f, 0, mImagePlayer[player_num], true, turn); //プレイヤーの表示位置
+		now_posX = p_posX;
 	}
 
 	ShowDebug();
@@ -267,15 +274,20 @@ void Player::Turn() {
 
 		DrawFormatString(0, 50, GetColor(255, 255, 255), "ジャンプ中ではありません");
 
+		/* スライドターン中に逆方向に入力した時の処理 */
 		if (slide_turn) { //スライドターンがtrueの時
 			if (left_turn && iKeyFlg & PAD_INPUT_RIGHT) { //ターンがfalseで右入力されている時
+				turn_cancel = true;
 				slide_turn = false;
 			}
 			else if (right_turn && iKeyFlg & PAD_INPUT_LEFT) { //ターンがtrueで左入力されている時
+				turn_cancel = true;
 				slide_turn = false;
+				//turn = true;
 			}
 		}
 
+		/* スライドターンに入る時の処理 */
 		if (iNowKey & PAD_INPUT_LEFT) { //左に入力されている時
 			DrawFormatString(0, 60, GetColor(255, 255, 255), "左入力中です");
 			if (moveX == 1.0f) { //もし移動方向が正の値だったら
@@ -284,6 +296,7 @@ void Player::Turn() {
 			}
 			else {
 				left_turn = false;
+				turn = true;
 			}
 
 		}
@@ -295,15 +308,17 @@ void Player::Turn() {
 			}
 			else {
 				right_turn = false;
+				turn = false;
 			}
 		}
 
 		/* スライドターン中に入力が離された場合は下で処理を途中再開 */
-		if (slide_turn && iNowKey == 0) {
+		if (slide_turn && (iNowKey == 0 || iNowKey== 16)) {
 			SlideTurn();
 		}
-
-		if (slide_turn == false && iNowKey != 0) {
+		/* ここの条件処理をslide_turnのみにすると、キー入力をしている状態だと2回SlideTurnの処理に入ってしまう */
+		
+		if (slide_turn == false && iNowKey & PAD_INPUT_LEFT || iNowKey & PAD_INPUT_RIGHT) { 
 			if (moveX == -1.0f) {
 				turn = true;
 			}
@@ -320,7 +335,7 @@ void Player::Walk() { //歩く処理
 			idle = false;
 			walk = true;
 			stop_time = 0;
-			speed = 0.1f;
+			speed = 0.0f;
 			acceleration = 0.05f;
 		}
 
@@ -328,25 +343,21 @@ void Player::Walk() { //歩く処理
 
 		if (!jump) {
 			time++;
-			if (speed < 3) {
-				if (time > 23)acceleration = 0.1;
+			if (speed < 3.0f) {
+				if (time > 23.0f)acceleration = 0.1f;
 				speed = acceleration * time + 0.1;
 			}
-			
-			
-			
-
-			else if(speed >= 3.0f) {
+			else {
 				speed = 3.0f;
 			}
 
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
-
+			now_posX;
 		}
 	}
 	else if (jump) {
 
-		if (now_speed > 0.1f){
+		if (now_speed > 0.0f){
 			if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT) {
 
 				reverse_input = true;  //逆方向に入力したのを記録
@@ -359,12 +370,7 @@ void Player::Walk() { //歩く処理
 					speed -= 0.1f;
 				}
 
-				if (!dash) {
-					if (speed < -1.5f)speed = -1.5f;
-				}
-				else {
-					if (speed < -2.5)speed = -2.5f;
-				}
+				if (speed < -1.5f)speed = -1.5f;
 
 			}
 			else if (moveX == -1.0f && iNowKey & PAD_INPUT_RIGHT) {
@@ -381,13 +387,13 @@ void Player::Walk() { //歩く処理
 
 				if (speed < -1.5f)speed = -1.5f;
 
-				if (speed < -2.5)speed = -2.5f; //ダッシュではこれを使う
 			}
 			else if(!reverse_input){ //逆方向への入力がない時　
 				time++;
-				if (speed < 3) {
-					if (time > 23)acceleration = 0.1;
-					speed = acceleration * time + 0.1;
+				if (speed < 3.0f) {
+					if (time > 23.0f)acceleration = 0.1f;
+					speed = acceleration * time + 0.1f;
+					DrawFormatString(0, 340, GetColor(255, 255, 255), "390行目の加速処理");
 				}
 				else if (speed >= 3.0f) {
 					speed = 3.0f;
@@ -395,13 +401,14 @@ void Player::Walk() { //歩く処理
 			}
 
 		}
-		else if (now_speed == 0.1f) {
+		else if (now_speed == 0.0f) {
 
 			time++;
 			if (iNowKey & PAD_INPUT_RIGHT) {
-				if (speed < 3) {
-					if (time > 23)acceleration = 0.1;
-					speed = acceleration * time + 0.1;
+				if (speed < 3.0f) {
+					if (time > 23.0f)acceleration = 0.1f;
+					speed = acceleration * time + 0.1f;
+					DrawFormatString(0, 340, GetColor(255, 255, 255), "404行目の加速処理");
 				}
 				else if (speed >= 3.0f) {
 					speed = 3.0f;
@@ -409,9 +416,10 @@ void Player::Walk() { //歩く処理
 				moveX = 1.0f;
 			}
 			else if (iNowKey & PAD_INPUT_LEFT) {
-				if (speed < 3) {
-					if (time > 23)acceleration = 0.1;
-					speed = acceleration * time + 0.1;
+				if (speed < 3.0f) {
+					if (time > 23.0f)acceleration = 0.1f;
+					speed = acceleration * time + 0.1f;
+					DrawFormatString(0, 340, GetColor(255, 255, 255), "414行目の加速処理");
 				}
 				else if (speed >= 3.0f) {
 					speed = 3.0f;
@@ -420,8 +428,9 @@ void Player::Walk() { //歩く処理
 			}
 		}
 
-		if (!dont_move && (iNowKey & PAD_INPUT_LEFT) || (iNowKey & PAD_INPUT_RIGHT)) {
+		if (!dont_move/* && (iNowKey & PAD_INPUT_LEFT) || (iNowKey & PAD_INPUT_RIGHT)*/) {
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
+			now_posX;
 		}
 		
 	}
@@ -447,40 +456,39 @@ void Player::Dash() { //走る処理
 
 		/* 加速処理 */
 		if (walk == true) {
-			if (wtor_time == 0) {
-				wtor_time = time + 16;
+			if (wtor_time == 0.0f) {
+				wtor_time = time + 16.0f;
 			}
-			if (time < wtor_time && speed < 5) {
+			if (time < wtor_time && speed < 5.0f) {
 				wtor_time++;
-				if (speed >= 3)acceleration = 0.15;
-				speed = acceleration * wtor_time + 0.1;
+				if (speed >= 3.0f)acceleration = 0.15f;
+				speed = acceleration * wtor_time + 0.1f;
 			}
 			else {
-				speed = 5;
+				speed = 5.0f;
 				walk = false;
-				wtor_time = 0; //ランタイム初期化
+				wtor_time = 0.0f; //ランタイム初期化
 			}
-			//speed = 5;
 		}
 		else {
-			if (time < 33 && speed < 5) {
-				if (speed >= 3)acceleration = 0.15;
-				speed = acceleration * time + 0.1;
+			if (time < 33.0f && speed < 5.0f) {
+				if (speed >= 3.0f)acceleration = 0.15f;
+				speed = acceleration * time + 0.1f;
 			}
 			else {
-				speed = 5;
+				speed = 5.0f;
 			}
 		}
 
 		
 
 		p_posX = p_posX + (speed * moveX); //プレイヤーの移動
-
+		now_posX = p_posX;
 		
 		
 	}
 	else if (jump) {
-		if (now_speed > 0.1f) {
+		if (now_speed > 0.0f) {
 			if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT) {
 
 				reverse_input = true;  //逆方向に入力したのを記録
@@ -513,7 +521,7 @@ void Player::Dash() { //走る処理
 			else if (!reverse_input) { //逆方向への入力がない時　
 				time++;
 				if (speed < 5.0f) {
-					if (time > 33)acceleration = 0.1;
+					if (time > 33)acceleration = 0.1f;
 					speed = acceleration * time + 0.1;
 				}
 				else if (speed >= 5.0f) {
@@ -521,15 +529,16 @@ void Player::Dash() { //走る処理
 				}
 			}
 		}
-		else if (now_speed == 0.1f) {
+		else if (now_speed == 0.0f) {
 
 			time++;
 
 
 			if (iNowKey & PAD_INPUT_RIGHT) {
 				if (speed < 5.0f) {
-					if (time > 33)acceleration = 0.1;
-					speed = acceleration * time + 0.1;
+					if (time > 33.0f)acceleration = 0.1f;
+					speed = acceleration * time + 0.1f;
+					DrawFormatString(0, 340, GetColor(255, 255, 255), "531行目の加速処理");
 				}
 				else if (speed >= 5.0f) {
 					speed = 5.0f;
@@ -538,8 +547,9 @@ void Player::Dash() { //走る処理
 			}
 			else if (iNowKey & PAD_INPUT_LEFT) {
 				if (speed < 5.0f) {
-					if (time > 33)acceleration = 0.1;
-					speed = acceleration * time + 0.1;
+					if (time > 33.0f)acceleration = 0.1f;
+					speed = acceleration * time + 0.1f;
+					DrawFormatString(0, 340, GetColor(255, 255, 255), "542行目の加速処理");
 				}
 				else if (speed >= 5.0f) {
 					speed = 5.0f;
@@ -548,90 +558,100 @@ void Player::Dash() { //走る処理
 			}
 		}
 
-		if (!dont_move && (iNowKey & PAD_INPUT_LEFT) || (iNowKey & PAD_INPUT_RIGHT)) {
+		if (!dont_move/* && (iNowKey & PAD_INPUT_LEFT) || (iNowKey & PAD_INPUT_RIGHT)*/) {
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
+			now_posX = p_posX;
 		}
 	}
 	else {
 		if (!jump)Stop();
 	}
 
-	if (speed >= 5) {
-		speed = 5;
-	}
+	/*if (speed >= 5.0f) {
+		speed = 5.0f;
+	}*/
 	
 }
 
 void Player::Stop() { //止まる時の処理
-	time = 0;
-	if (!slide_turn) {
-		if (idle == false) {
-			idle = true; //止まる時のフラグをtrueにする
-			now_speed = speed;
-			stop_max = speed * 5.3f;
-			acceleration = 0.05f;
+	time = 0.0f;
 
-			cnt = 0;
-			array_num = 0;
-		}
-
-		if (idle) {
-			if (stop_time < stop_max && speed > 0.1f) {
-				++stop_time;
-				
-
-				//if (stop_time > 20)acceleration = 0.05f;
-				speed = speed - (acceleration)*stop_time + 0.1;
-
-				p_posX = p_posX + (speed * moveX); //プレイヤーの移動
-				now_posX = p_posX;
-			}
-
-			else {
-				speed = 0.1f;
-				player_num = 0;
-			}
-		}
-	}
-		
-}
-
-void Player::SlideTurn() {
-	DrawFormatString(0, 30, GetColor(255, 255, 255), "スライドターン処理中" );
-	if (!jump && slide_turn == false) {
-		slide_turn = true;
+	if (idle == false && !slide_turn) {
+		idle = true; //止まる時のフラグをtrueにする
 
 		now_speed = speed;
 		stop_max = speed * 5.3f;
-	}
-	
-	if (speed <= 0.1f) {
+		acceleration = 0.05f;
 
-		slide_turn = false;
-		moveX = -moveX;
-		slid_time = 0;
-		speed = 0.1f;
+		cnt = 0;
+		array_num = 0;
 	}
 
-	else if (slide_turn) {
-		if (speed < now_speed && speed > 0.1) {
-			player_num = 4;
-		}
-		if (speed > 0.1f) {
+	if (idle) {
+		if (stop_time < stop_max && speed > 0.0f) {
+			++stop_time;
 
-			time = 0;
-			++slid_time;
 
-			speed = speed - (acceleration) * slid_time + 0.1;
+			//if (stop_time > 20)acceleration = 0.05f;
+			speed = speed - (acceleration)*stop_time + 0.1f;
 
 			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
 			now_posX = p_posX;
 		}
+
+		else {
+			speed = 0.0f;
+			player_num = 0;
+		}
 	}
+	/*if (!slide_turn) {
+		
+	}*/
+		
+}
 
+void Player::SlideTurn() {
+	time = 0;
+	if (!jump && slide_turn == false) {
+		slide_turn = true;
+		//speed = 5.0f;
+		now_speed = speed;
+		stop_max = speed * 5.3f;
+		acceleration = 0.05f;
+		//speed = now_speed;
+	}
 	
+	else if (slide_turn) {
+		if (speed > 0.0f) {
+			player_num = 4;
+		}
+		if (slid_time < stop_max && speed > 0.0f) {
+			++slid_time;
 
-	
+
+			//if (stop_time > 20)acceleration = 0.05f;
+			speed = speed - (acceleration)*slid_time + 0.1f;
+
+			p_posX = p_posX + (speed * moveX); //プレイヤーの移動
+			now_posX = p_posX;
+		}
+
+		else {
+			slide_turn = false;
+			moveX = -moveX;
+			slid_time = 0.0f;
+			speed = 0.0f;
+			player_num = 0;
+		}
+
+		if (jump) {
+			slide_turn = false;
+			moveX = -moveX;
+			slid_time = 0.0f;
+			//speed = 0.0f;
+			player_num = 0;
+		}
+	}
 }
 
 void Player::Jump() {
@@ -642,6 +662,7 @@ void Player::Jump() {
 	/* ジャンプフラグの切り替え */
 	if (isGround == true && iKeyFlg & PAD_INPUT_B) {
 		if (jump == false) {
+			//speed = now_speed;
 			jump = true;
 			jump_pos = p_posY;
 			input_hold = true;
@@ -657,6 +678,10 @@ void Player::Jump() {
 			}
 			*/
 			isGround = false;
+
+			if (slide_turn) {
+				slide_turn = false;
+			}
 		}
 	}
 
@@ -842,6 +867,7 @@ void Player::Fall() {
 void Player::KillY() {
 	if (p_posY + (p_h * 0.5) > 608) {
 		p_posX = startX;
+		now_posX = p_posX;
 		p_posY = startY;
 
 		isGround = true;
@@ -870,7 +896,7 @@ void Player::ShowDebug() { //デバッグ表示
 	DrawFormatString(0, 320, GetColor(255, 255, 255), "プレイヤーのY座標 : %lf", p_posY);
 	DrawFormatString(0, 360, GetColor(255, 255, 255), "ジャンプパワー: %lf", jump_power);*/
 	DrawFormatString(0, 360, GetColor(255, 255, 255), "slide_turn: %d", slide_turn);
-	DrawFormatString(0, 110, GetColor(255, 255, 255), "スピード%f", abs(speed));
+	DrawFormatString(0, 110, GetColor(255, 255, 255), "加速度%f", acceleration);
 	DrawFormatString(0, 70, GetColor(255, 255, 255), "現在の入力[左:2,右:4]:%d", iNowKey);
 	DrawFormatString(0, 30, GetColor(255, 255, 255), "入力時間:%lf", time);
 	DrawFormatString(0, 130, GetColor(255, 255, 255), "jumpmax:%lf", jump_max);
@@ -879,7 +905,8 @@ void Player::ShowDebug() { //デバッグ表示
 	DrawFormatString(0, 190, GetColor(255, 255, 255), "スピード%lf", speed);
 	DrawFormatString(0, 230, GetColor(255, 255, 255), "now_time%lf", now_time);
 	DrawFormatString(0, 250, GetColor(255, 255, 255), "34 - now_time = %lf", 34 - now_time);
-	DrawFormatString(0, 320, GetColor(255, 255, 255), "プレイヤーのY座標 : %lf", p_posX);
+	DrawFormatString(0, 320, GetColor(255, 255, 255), "p_posX : %lf", p_posX);
+	DrawFormatString(0, 340, GetColor(255, 255, 255), "now_posX : %lf", now_posX);
 	//p_posY = p_posY - (-jump_power * moveY);
 
 
@@ -893,24 +920,24 @@ void Player::ShowDebug() { //デバッグ表示
 	//DrawCircle(p_posX, p_posY + p_h / 2, 5, GetColor(255, 255, 255), 1); //Playerの底辺
 }
 
-double Player::CircOut(double t, double totaltime, double min, double max)
-{
-	max -= min;
-	t = t / totaltime - 1;
-	return max * sqrt(1 - t * t) + min;
-}
-
-bool Player::Continue() {
-	bool cont;
-	if (iNowKey != iOldKey) {
-		if (++continue_time >= 10) {
-			cont = true;
-			return cont;
-		}
-		else {
-			continue_time = 0;
-			cont = false;
-			return cont;
-		}
-	}
-}
+//double Player::CircOut(double t, double totaltime, double min, double max)
+//{
+//	max -= min;
+//	t = t / totaltime - 1;
+//	return max * sqrt(1 - t * t) + min;
+//}
+//
+//bool Player::Continue() {
+//	bool cont;
+//	if (iNowKey != iOldKey) {
+//		if (++continue_time >= 10) {
+//			cont = true;
+//			return cont;
+//		}
+//		else {
+//			continue_time = 0;
+//			cont = false;
+//			return cont;
+//		}
+//	}
+//}
