@@ -60,6 +60,7 @@ void Player::Player_Initialize()//初期化
 	isGround = true;
 	reverse_input = false;
 	turn_cancel = false;
+	after_slide = false;
 
 	time = 0;
 	wtor_time = 0;
@@ -313,7 +314,7 @@ void Player::Turn() {
 		}
 
 		/* スライドターン中に入力が離された場合は下で処理を途中再開 */
-		if (slide_turn && (iNowKey == 0 || iNowKey== 16)) {
+		if (slide_turn && (iNowKey == 0 || iNowKey== 16 || after_slide)) {
 			SlideTurn();
 		}
 		/* ここの条件処理をslide_turnのみにすると、キー入力をしている状態だと2回SlideTurnの処理に入ってしまう */
@@ -361,6 +362,7 @@ void Player::Walk() { //歩く処理
 			if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT) {
 
 				reverse_input = true;  //逆方向に入力したのを記録
+				after_slide = true;
 
 				if (now_time < 34.0f) {
 					minus = (double)(speed / (34.0f - now_time));
@@ -376,6 +378,7 @@ void Player::Walk() { //歩く処理
 			else if (moveX == -1.0f && iNowKey & PAD_INPUT_RIGHT) {
 
 				reverse_input = true;  //逆方向に入力したのを記録
+				after_slide = true;
 
 				if (now_time < 34.0f) { //34.0fはジャンプで最高到達点に行ってから落ちはじめる直前のフレーム
 					minus = (double)(speed / (34.0f - now_time)); //スピードから引く値をボタンの入力時間によって可変
@@ -492,6 +495,7 @@ void Player::Dash() { //走る処理
 			if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT) {
 
 				reverse_input = true;  //逆方向に入力したのを記録
+				after_slide = true;
 
 				if (now_time < 34.0f) {
 					minus = (double)(speed / (34.0f - now_time));
@@ -507,6 +511,7 @@ void Player::Dash() { //走る処理
 			else if (moveX == -1.0f && iNowKey & PAD_INPUT_RIGHT) {
 
 				reverse_input = true;  //逆方向に入力したのを記録
+				after_slide = true;
 
 				if (now_time < 34.0f) { //34.0fはジャンプで最高到達点に行ってから落ちはじめる直前のフレーム
 					minus = (double)(speed / (34.0f - now_time)); //スピードから引く値をボタンの入力時間によって可変
@@ -612,6 +617,8 @@ void Player::Stop() { //止まる時の処理
 
 void Player::SlideTurn() {
 	time = 0;
+	
+
 	if (!jump && slide_turn == false) {
 		slide_turn = true;
 		//speed = 5.0f;
@@ -619,6 +626,15 @@ void Player::SlideTurn() {
 		stop_max = speed * 5.3f;
 		acceleration = 0.05f;
 		//speed = now_speed;
+		if (after_slide) {
+			if (turn) {
+				turn = false;
+			}
+			else {
+				turn = true;
+			}
+			//after_slide = false;
+		}
 	}
 	
 	else if (slide_turn) {
@@ -642,14 +658,34 @@ void Player::SlideTurn() {
 			slid_time = 0.0f;
 			speed = 0.0f;
 			player_num = 0;
+
+			if (after_slide) {
+				if (turn) {
+					turn = false;
+				}
+				else {
+					turn = true;
+				}
+				after_slide = false;
+			}
+			
 		}
 
+		/* スライドターン中にジャンプした場合 */
 		if (jump) {
 			slide_turn = false;
 			moveX = -moveX;
 			slid_time = 0.0f;
-			//speed = 0.0f;
-			player_num = 0;
+
+			if (after_slide) {
+				if (turn) {
+					turn = false;
+				}
+				else {
+					turn = true;
+				}
+				after_slide = false;
+			}
 		}
 	}
 }
@@ -681,6 +717,7 @@ void Player::Jump() {
 
 			if (slide_turn) {
 				slide_turn = false;
+				after_slide = true;
 			}
 		}
 	}
@@ -858,6 +895,15 @@ void Player::Fall() {
 			jump_power = 1.0f;
 			jump_max = 0;
 			
+			if (after_slide && !(iNowKey & PAD_INPUT_LEFT || iNowKey & PAD_INPUT_RIGHT)) {
+				
+				moveX = -moveX;
+				speed = abs(speed);
+				SlideTurn();
+			}
+			else {
+				after_slide = false;
+			}
 		}
 
 	}

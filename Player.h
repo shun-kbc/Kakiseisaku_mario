@@ -28,6 +28,7 @@ class Player : Input{
 	bool turn = false; // true:¶‚ÉŒü‚­ false:‰E‚ÉŒü‚­
 	bool old_turn = false;
 	bool slide_turn = false;
+	bool after_slide;
 	bool right_turn;
 	bool left_turn;
 	bool turn_cancel;
