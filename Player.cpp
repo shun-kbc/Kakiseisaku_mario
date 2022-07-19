@@ -31,6 +31,7 @@ void Player::Player_Initialize()//初期化
 	j_accel = 1.0f;
 	jump_power = 1.0f;
 	moveX = 1.0f;
+	j_direction = 0.0f;
 	moveY = -1.0f;
 
 	startX = 100;
@@ -237,10 +238,8 @@ void Player::Player_Draw()//描画
 
 void Player::ChangeImage() {
 	if(!jump){
-		if (slide_turn && speed > 0.5) {
-			//player_num = 4;
-		}
-		else if (!idle && !slide_turn) {
+		
+		if (!idle && !slide_turn) {
 			if (!dash) { //歩き
 				if (++cnt >= cnt_limit) {
 					cnt = 0;
@@ -263,6 +262,11 @@ void Player::ChangeImage() {
 			}
 		}
 		else if (idle) {
+			cnt = 0;
+			cnt_limit = 0;
+			array_num = 0;
+		}
+		else if (slide_turn) {
 			cnt = 0;
 			cnt_limit = 0;
 			array_num = 0;
@@ -357,7 +361,7 @@ void Player::Walk() { //歩く処理
 		}
 	}
 	else if (jump) {
-
+		/* スピードがついている状態でジャンプした時 */
 		if (now_speed > 0.0f){
 			if (moveX == 1.0f && iNowKey & PAD_INPUT_LEFT) {
 
@@ -393,6 +397,7 @@ void Player::Walk() { //歩く処理
 			}
 			else if(!reverse_input){ //逆方向への入力がない時　
 				time++;
+				
 				if (speed < 3.0f) {
 					if (time > 23.0f)acceleration = 0.1f;
 					speed = acceleration * time + 0.1f;
@@ -402,32 +407,96 @@ void Player::Walk() { //歩く処理
 					speed = 3.0f;
 				}
 			}
+			/*else if (reverse_input) {
+
+			}*/
 
 		}
+		/* 止まっている時にジャンプした時 */
 		else if (now_speed == 0.0f) {
 
 			time++;
-			if (iNowKey & PAD_INPUT_RIGHT) {
-				if (speed < 3.0f) {
+
+			if (j_direction == -1.0f && iNowKey & PAD_INPUT_RIGHT) {
+
+				if (!reverse_input) {
+					reverse_input = true;  //逆方向に入力したのを記録
+				}
+
+				if (now_time < 34.0f) {
+					minus = (double)(speed / (34.0f - now_time));
+					speed -= (double)minus;
+				}
+				else if (fall) {
+					speed -= 0.1f;
+				}
+
+				if (speed < -1.5f)speed = -1.5f;
+				/*if (speed < 3.0f) {
 					if (time > 23.0f)acceleration = 0.1f;
 					speed = acceleration * time + 0.1f;
 					DrawFormatString(0, 340, GetColor(255, 255, 255), "404行目の加速処理");
 				}
 				else if (speed >= 3.0f) {
 					speed = 3.0f;
-				}
-				moveX = 1.0f;
+				}*/
+
+				/*if (!reverse_input) {
+					moveX = 1.0f;
+				}*/
+				
 			}
-			else if (iNowKey & PAD_INPUT_LEFT) {
-				if (speed < 3.0f) {
+			else if (j_direction == 1.0f && iNowKey & PAD_INPUT_LEFT) {
+
+				if (!reverse_input) {
+					reverse_input = true;  //逆方向に入力したのを記録
+				}
+
+				if (now_time < 34.0f) {
+					minus = (double)(speed / (34.0f - now_time));
+					speed -= (double)minus;
+				}
+				else if (fall) {
+					speed -= 0.1f;
+				}
+
+				if (speed < -1.5f)speed = -1.5f;
+				/*if (speed < 3.0f) {
 					if (time > 23.0f)acceleration = 0.1f;
 					speed = acceleration * time + 0.1f;
 					DrawFormatString(0, 340, GetColor(255, 255, 255), "414行目の加速処理");
 				}
 				else if (speed >= 3.0f) {
 					speed = 3.0f;
+				}*/
+
+				/*if (!reverse_input) {
+					moveX = -1.0f;
+				}*/
+				
+				
+			}
+			else if(reverse_input){
+				if (now_time < 34.0f) {
+					minus = (double)(speed / (34.0f - now_time));
+					speed -= (double)minus;
 				}
-				moveX = -1.0f;
+				else if (fall) {
+					speed -= 0.1f;
+				}
+
+				if (speed < -1.5f)speed = -1.5f;
+
+				/*time++;
+
+				if (speed < 3.0f) {
+					if (time > 23.0f)acceleration = 0.1f;
+					speed = acceleration * time + 0.1f;
+					DrawFormatString(0, 340, GetColor(255, 255, 255), "390行目の加速処理");
+				}
+				else if (speed >= 3.0f) {
+					speed = 3.0f;
+				}*/
 			}
 		}
 
@@ -588,7 +657,11 @@ void Player::Stop() { //止まる時の処理
 		stop_max = speed * 5.3f;
 		acceleration = 0.05f;
 
+		/*cnt = 0;
+		array_num = 0;*/
+
 		cnt = 0;
+		cnt_limit = 0;
 		array_num = 0;
 	}
 
@@ -635,6 +708,10 @@ void Player::SlideTurn() {
 			}
 			//after_slide = false;
 		}
+
+		cnt = 0;
+		cnt_limit = 0;
+		array_num = 0;
 	}
 	
 	else if (slide_turn) {
@@ -695,8 +772,19 @@ void Player::Jump() {
 		moveY = -1.0f;
 	}
 
+	if (iKeyFlg & PAD_INPUT_B && iNowKey & PAD_INPUT_LEFT) {
+		j_direction = -1.0f;
+		moveX = j_direction;
+	}
+	else if (iKeyFlg & PAD_INPUT_B && iNowKey & PAD_INPUT_RIGHT) {
+		j_direction = 1.0f;
+		moveX = j_direction;
+	}
+
 	/* ジャンプフラグの切り替え */
 	if (isGround == true && iKeyFlg & PAD_INPUT_B) {
+		
+
 		if (jump == false) {
 			//speed = now_speed;
 			jump = true;
@@ -953,6 +1041,8 @@ void Player::ShowDebug() { //デバッグ表示
 	DrawFormatString(0, 250, GetColor(255, 255, 255), "34 - now_time = %lf", 34 - now_time);
 	DrawFormatString(0, 320, GetColor(255, 255, 255), "p_posX : %lf", p_posX);
 	DrawFormatString(0, 340, GetColor(255, 255, 255), "now_posX : %lf", now_posX);
+	DrawFormatString(0, 380, GetColor(255, 255, 255), "idle : %d", idle);
+	
 	//p_posY = p_posY - (-jump_power * moveY);
 
 

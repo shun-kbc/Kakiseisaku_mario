@@ -51,8 +51,9 @@ class Player : Input{
 	double j_accel;
 	double speed;
 	double now_speed;
-	double jump_power;
+	
 	float moveX;
+	float j_direction; //ジャンプの時の方向
 	float moveY;
 	double startX;
 	double startY;
@@ -90,9 +91,10 @@ public:
 	double p_posY; //プレイヤーのポジション
 	double p_w;
 	double p_h;
+	double jump_power;
 
 	bool fall = false;
-
+	
 	void Player_Initialize();//初期化
 	void Player_Finalize();//終了処理
 	void Player_Update();//更新

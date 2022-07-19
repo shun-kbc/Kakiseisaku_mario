@@ -28,7 +28,7 @@ void Block::Block_Update() {
 	if (HitBoxPlayer()) {
 		if ((player.p_posX > b_x - (b_w * 0.5) && player.p_posX < b_x + (b_w * 0.5)) && player.p_posY - (player.p_h * 0.5f) < b_y + (b_h * 0.5f) && player.p_posY - (player.p_h * 0.5f) > b_y - (b_h * 0.5f)) {
 			player.fall = true;
-
+			player.jump_power = 2.0f;
 			/* ここにブロックが浮いたり、壊れたりする処理を入れる */
 		}
 	}
