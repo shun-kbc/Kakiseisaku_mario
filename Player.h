@@ -5,15 +5,6 @@
 
 
 class Player : Input{
-	/*enum class Accel_type {
-		walk1,
-		walk2,
-		run1,
-		run2,
-		none
-	};
-	Accel_type acceltype;*/
-	//string accel;
 
 	static int mImagePlayer[MRIO_IMAGE_MAX];    //画像ハンドル格納用変数
 	int change_walk[17] = {8,7,7,6,2,3,4,5,3,5,4,3,5,4,3,5,4}; //歩きの画像変更フレーム
@@ -25,9 +16,9 @@ class Player : Input{
 
 	int input;
 
-	bool turn = false; // true:左に向く false:右に向く
-	bool old_turn = false;
-	bool slide_turn = false;
+	bool turn; // true:左に向く false:右に向く
+	bool old_turn;
+	bool slide_turn;
 	bool after_slide;
 	bool right_turn;
 	bool left_turn;
@@ -51,6 +42,7 @@ class Player : Input{
 	double j_accel;
 	double speed;
 	double now_speed;
+	double old_speed;
 	
 	float moveX;
 	float j_direction; //ジャンプの時の方向
@@ -63,7 +55,6 @@ class Player : Input{
 	double jump_max; //最高到達点
 	double minus;
 
-	//int N;
 	bool dash;
 	bool walk;
 	bool idle;
@@ -71,20 +62,18 @@ class Player : Input{
 	bool _continue;
 	bool isGround;
 	bool reverse_input;
+	bool zero_start;
 
 	void Turn(); //振り向き処理
 	void Walk(); //歩き
 	void Dash(); //走り
-	void Stop();
-	void SlideTurn();
+	void Stop(); //歩きまたは走りから止まる処理
+	void SlideTurn(); //スライドターン
 	void Jump(); //ジャンプ
-	void JumpMove();
-	void Fall();
-	void KillY();
+	void Fall(); //落下処理
+	void KillY(); //落下で死ぬ処理
 	void ChangeImage(); //画像切り替え処理
 	void ShowDebug(); //デバッグ表示処理
-	double CircOut(double t, double totaltime, double min, double max);
-	bool Continue();
 
 public:
 	double p_posX; //プレイヤーのポジション

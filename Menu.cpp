@@ -42,6 +42,6 @@ void Menu::Menu_Draw(){
     DrawGraph(0, 0, mImageHandle, FALSE);
 
     //メニューカーソル（三角形）の表示
-    DrawString(20, 400, "Zキーでゲーム画面", GetColor(136, 136, 255));
+    DrawString(20, 400, "Aボタンでゲーム画面", GetColor(136, 136, 255));
 
 }
