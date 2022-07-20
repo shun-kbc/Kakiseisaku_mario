@@ -124,7 +124,7 @@ void Player::Player_Update()//更新
 	else if (!jump && (p_posX - (p_w * 0.5) > 498)/* ←ちゃんとした地面の判定に変えるとブロックの横に落下中に当たったときのなぐは治る */) {
 		fall = true;
 		isGround = false;
-		reverse_input = false;
+		
 		Fall();
 	}
 	
@@ -157,6 +157,8 @@ void Player::Player_Update()//更新
 			p_posY = block.b_y - (block.b_h);
 
 			isGround = true;
+
+			reverse_input = false;
 		}
 
 		/* ブロック横(左) */
@@ -415,23 +417,40 @@ void Player::Walk() { //歩く処理
 		/* 止まっている時にジャンプした時 */
 		else if (now_speed == 0.0f) {
 
-			time++;
-
+			//time++;
+			//ジャンプ時のマリオの方向が左に向いていて右に入力した時
 			if (j_direction == -1.0f && iNowKey & PAD_INPUT_RIGHT) {
-
+				time++;
+				//逆方向への入力がfalseであれば
 				if (!reverse_input) {
+					//moveX = 1.0f; //動く方向を右に切り替える
+					//j_direction = 1.0f; //ジャンプ時の方向も更新
 					reverse_input = true;  //逆方向に入力したのを記録
 				}
-
-				if (now_time < 34.0f) {
-					minus = (double)(speed / (34.0f - now_time));
-					speed -= (double)minus;
+				//逆方向の入力がされている時
+				else if(reverse_input){
+					/* 通常移動処理 */
+					/*if (speed < 3.0f) {
+					if (time > 23.0f)acceleration = 0.1f;
+					speed = acceleration * time + 0.1f;
+					DrawFormatString(0, 340, GetColor(255, 255, 255), "390行目の加速処理");
 				}
-				else if (fall) {
-					speed -= 0.1f;
-				}
+				else if (speed >= 3.0f) {
+					speed = 3.0f;
+				}*/
 
-				if (speed < -1.5f)speed = -1.5f;
+					/* スピードマイナス処理 */
+					if (now_time < 34.0f) {
+						minus = (double)(speed / (34.0f - now_time));
+						speed -= (double)minus;
+					}
+					else if (fall) {
+						speed -= 0.1f;
+					}
+
+					if (speed < -1.5f)speed = -1.5f;
+				}
+				
 				/*if (speed < 3.0f) {
 					if (time > 23.0f)acceleration = 0.1f;
 					speed = acceleration * time + 0.1f;
@@ -447,56 +466,88 @@ void Player::Walk() { //歩く処理
 				
 			}
 			else if (j_direction == 1.0f && iNowKey & PAD_INPUT_LEFT) {
+				time++;
+
+				/*if (speed) {
+
+				}*/
 
 				if (!reverse_input) {
+					//moveX = -1.0f; //動く方向を右に切り替える
+					//j_direction = -1.0f; //ジャンプ時の方向も更新
 					reverse_input = true;  //逆方向に入力したのを記録
 				}
+				else if(reverse_input){
 
-				if (now_time < 34.0f) {
-					minus = (double)(speed / (34.0f - now_time));
-					speed -= (double)minus;
-				}
-				else if (fall) {
-					speed -= 0.1f;
-				}
+					if (now_time < 34.0f) {
+						minus = (double)(speed / (34.0f - now_time));
+						speed -= (double)minus;
+					}
+					else if (fall) {
+						speed -= 0.1f;
+					}
 
-				if (speed < -1.5f)speed = -1.5f;
-				/*if (speed < 3.0f) {
-					if (time > 23.0f)acceleration = 0.1f;
-					speed = acceleration * time + 0.1f;
-					DrawFormatString(0, 340, GetColor(255, 255, 255), "414行目の加速処理");
+					if (speed < -1.5f)speed = -1.5f;
 				}
-				else if (speed >= 3.0f) {
-					speed = 3.0f;
-				}*/
-
-				/*if (!reverse_input) {
-					moveX = -1.0f;
-				}*/
+				
 				
 				
 			}
-			else if(reverse_input){
-				if (now_time < 34.0f) {
-					minus = (double)(speed / (34.0f - now_time));
-					speed -= (double)minus;
-				}
-				else if (fall) {
-					speed -= 0.1f;
-				}
+			//else if(reverse_input){
+			//	if (now_time < 34.0f) {
+			//		minus = (double)(speed / (34.0f - now_time));
+			//		speed -= (double)minus;
+			//	}
+			//	else if (fall) {
+			//		speed -= 0.1f;
+			//	}
 
-				if (speed < -1.5f)speed = -1.5f;
+			//	if (speed < -1.5f)speed = -1.5f;
 
-				/*time++;
+			//	/*time++;
 
-				if (speed < 3.0f) {
-					if (time > 23.0f)acceleration = 0.1f;
-					speed = acceleration * time + 0.1f;
-					DrawFormatString(0, 340, GetColor(255, 255, 255), "390行目の加速処理");
+			//	if (speed < 3.0f) {
+			//		if (time > 23.0f)acceleration = 0.1f;
+			//		speed = acceleration * time + 0.1f;
+			//		DrawFormatString(0, 340, GetColor(255, 255, 255), "390行目の加速処理");
+			//	}
+			//	else if (speed >= 3.0f) {
+			//		speed = 3.0f;
+			//	}*/
+			//}
+			else {
+
+				if (!reverse_input && iNowKey & PAD_INPUT_LEFT ) {
+					time++;
+					moveX = -1.0f;
 				}
-				else if (speed >= 3.0f) {
-					speed = 3.0f;
-				}*/
+				else if (!reverse_input && iNowKey & PAD_INPUT_RIGHT) {
+					time++;
+					moveX = 1.0f;
+				}
+				
+				if (!reverse_input) {
+					if (speed < 3.0f) {
+						if (time > 23.0f)acceleration = 0.1f;
+						speed = acceleration * time + 0.1f;
+						DrawFormatString(0, 340, GetColor(255, 255, 255), "390行目の加速処理");
+					}
+					else if (speed >= 3.0f) {
+						speed = 3.0f;
+					}
+				}
+				else {
+					if (now_time < 34.0f) {
+						minus = (double)(speed / (34.0f - now_time));
+						speed -= (double)minus;
+					}
+					else if (fall) {
+						speed -= 0.1f;
+					}
+
+					if (speed < -1.5f)speed = -1.5f;
+				}
+				
 			}
 		}
 
@@ -992,6 +1043,7 @@ void Player::Fall() {
 			else {
 				after_slide = false;
 			}
+			reverse_input = false;
 		}
 
 	}
@@ -1042,7 +1094,8 @@ void Player::ShowDebug() { //デバッグ表示
 	DrawFormatString(0, 320, GetColor(255, 255, 255), "p_posX : %lf", p_posX);
 	DrawFormatString(0, 340, GetColor(255, 255, 255), "now_posX : %lf", now_posX);
 	DrawFormatString(0, 380, GetColor(255, 255, 255), "idle : %d", idle);
-	
+	DrawFormatString(0, 400, GetColor(255, 255, 255), "ジャンプ時の方向 : %f", j_direction);
+	DrawFormatString(0, 420, GetColor(255, 255, 255), "逆入力1.true 0.false: %d", reverse_input);
 	//p_posY = p_posY - (-jump_power * moveY);
 
 
